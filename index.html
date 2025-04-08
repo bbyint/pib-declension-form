@@ -78,12 +78,8 @@
       "старший": "старшого",
       "технік": "техніка",
       "мобілізації": "мобілізації",
-      "зенітної кулеметної роти": "зенітної кулеметної роти"
+      "зенітну кулеметну роту": "зенітної кулеметної роти"
     };
-
-    function isNamePart(word) {
-      return /^[А-ЯІЇЄҐ][а-яіїєґ']+$/.test(word);
-    }
 
     function declinePIB(words, gender) {
       const [lastName, firstName, patronymic] = words;
@@ -96,7 +92,7 @@
       return window.shevchenko.inAccusative(person);
     }
 
-    document.getElementById('sentenceForm').addEventListener('submit', async function(event) {
+    document.getElementById('sentenceForm').addEventListener('submit', function(event) {
       event.preventDefault();
 
       const sentence = document.getElementById('sentence').value.trim();
@@ -106,21 +102,26 @@
       const match = sentence.match(pibRegex);
 
       let result = sentence;
+      let declinedFull = '';
 
       if (match) {
         const [fullMatch, lastName, firstName, patronymic] = match;
         try {
           const declined = declinePIB([lastName, firstName, patronymic], gender);
-          const declinedFull = `${declined.familyName} ${declined.givenName} ${declined.patronymic}`;
-          result = result.replace(fullMatch, declinedFull);
+          declinedFull = `${declined.familyName} ${declined.givenName} ${declined.patronymic}`;
+          result = result.replace(fullMatch, '<<<PIB>>>');
         } catch (e) {
           console.error('Помилка shevchenko.js:', e);
         }
       }
 
       for (const [key, value] of Object.entries(wordDeclension)) {
-        const regex = new RegExp(`\\b${key}\\b`, 'gi');
+        const regex = new RegExp(`\\b${key.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\\b`, 'gi');
         result = result.replace(regex, value);
+      }
+
+      if (declinedFull) {
+        result = result.replace('<<<PIB>>>', declinedFull);
       }
 
       document.getElementById('result').value = result;
