@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Відмінювання речення у знахідний відмінок</title>
-    <script src="https://unpkg.com/@shevchenko/js@0.8.0/dist/shevchenko.umd.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -70,70 +69,76 @@
         <button type="submit">Відмінити</button>
     </form>
 
-    <script src="https://unpkg.com/@shevchenko/js@0.8.0/dist/shevchenko.umd.js"></script>
-<script>
-    const wordDeclension = {
-        "військовослужбовець": "військовослужбовця",
-        "за": "за",
-        "призовом": "призовом",
-        "під": "під",
-        "час": "час",
-        "мобілізації": "мобілізацію",
-        "головний": "головного",
-        "сержант": "сержанта",
-        "старший": "старшого",
-        "технік": "техніка",
-        "зенітної": "зенітну",
-        "кулеметної": "кулеметну",
-        "роти": "роту",
-        "2": "2"
-    };
+    <script type="module">
+        import * as shevchenko from 'https://cdn.skypack.dev/@shevchenko/js';
 
-    function isNamePart(word) {
-        return /^[А-ЯІЇЄҐ][а-яіїєґ']+$/.test(word);
-    }
+        const wordDeclension = {
+            "військовослужбовець": "військовослужбовця",
+            "за": "за",
+            "призовом": "призовом",
+            "під": "під",
+            "час": "час",
+            "мобілізації": "мобілізації",
+            "головний": "головного",
+            "сержант": "сержанта",
+            "старший": "старшого",
+            "технік": "техніка",
+            "зенітної": "зенітної",
+            "кулеметної": "кулеметної",
+            "роти": "роти",
+            "2": "2"
+        };
 
-    document.getElementById('sentenceForm').addEventListener('submit', function(event) {
-        event.preventDefault();
-
-        const sentence = document.getElementById('sentence').value.trim();
-        const gender = document.querySelector('input[name="gender"]:checked').value === 'male' ? 'masculine' : 'feminine';
-        const words = sentence.split(/\s+/);
-
-        let resultWords = [];
-        let i = 0;
-
-        while (i < words.length) {
-            const word = words[i];
-            const next1 = words[i + 1];
-            const next2 = words[i + 2];
-
-            if (isNamePart(word) && isNamePart(next1) && isNamePart(next2)) {
-                const person = {
-                    gender: gender,
-                    familyName: word,
-                    givenName: next1,
-                    patronymic: next2
-                };
-
-                try {
-                    const declined = shevchenko.inAccusative(person);
-                    resultWords.push(declined.familyName, declined.givenName, declined.patronymic);
-                    i += 3;
-                    continue;
-                } catch (err) {
-                    console.error("Shevchenko error:", err);
-                }
-            }
-
-            const cleanWord = word.replace(/,$/, "");
-            const declined = wordDeclension[cleanWord.toLowerCase()] || cleanWord;
-            resultWords.push(word.endsWith(',') ? declined + ',' : declined);
-            i++;
+        function isNamePart(word) {
+            return /^[А-ЯІЇЄҐ][а-яіїєґ']+$/.test(word);
         }
 
-        document.getElementById('result').value = resultWords.join(" ");
-    });
-</script>
+        document.getElementById('sentenceForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+
+            const sentence = document.getElementById('sentence').value.trim();
+            const gender = document.querySelector('input[name="gender"]:checked').value === 'male' ? 'masculine' : 'feminine';
+            const words = sentence.split(/(\s+|,\s*)/);
+
+            let resultWords = [];
+            let i = 0;
+
+            while (i < words.length) {
+                const word = words[i].trim();
+                const next1 = words[i + 2]?.trim();
+                const next2 = words[i + 4]?.trim();
+
+                if (isNamePart(word) && isNamePart(next1) && isNamePart(next2)) {
+                    const person = {
+                        gender: gender,
+                        familyName: word,
+                        givenName: next1,
+                        patronymic: next2
+                    };
+
+                    try {
+                        const declined = shevchenko.inAccusative(person);
+                        resultWords.push(declined.familyName);
+                        resultWords.push(words[i + 1]);
+                        resultWords.push(declined.givenName);
+                        resultWords.push(words[i + 3]);
+                        resultWords.push(declined.patronymic);
+                        i += 5;
+                        continue;
+                    } catch (err) {
+                        console.error("Shevchenko error:", err);
+                    }
+                }
+
+                const cleanWord = word.replace(/,$/, "");
+                const declined = wordDeclension[cleanWord.toLowerCase()] || cleanWord;
+                resultWords.push(words[i].endsWith(',') ? declined + ',' : declined);
+                i++;
+            }
+
+            document.getElementById('result').value = resultWords.join("");
+        });
+    </script>
 </body>
 </html>
+
