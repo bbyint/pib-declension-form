@@ -1,136 +1,148 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Відмінювання речення у знахідний відмінок</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 900px;
-            margin: 20px auto;
-            padding: 20px;
-            background: linear-gradient(to bottom right, #ddeeff, #ccddee);
-        }
-        label, input, textarea {
-            display: block;
-            margin-bottom: 10px;
-        }
-        button {
-            padding: 10px 20px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #0056b3;
-        }
-        .form-container {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-        .input-output {
-            display: flex;
-            gap: 20px;
-            justify-content: space-between;
-        }
-        .input-output textarea {
-            width: 100%;
-            height: 120px;
-            resize: vertical;
-            padding: 10px;
-            font-size: 16px;
-        }
-        .input-output label {
-            font-weight: bold;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Відмінювання речення у знахідний відмінок</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 900px;
+      margin: 20px auto;
+      padding: 20px;
+      background: linear-gradient(to bottom right, #ddeeff, #ccddee);
+    }
+    label, input, textarea {
+      display: block;
+      margin-bottom: 10px;
+    }
+    button {
+      padding: 10px 20px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    .form-container {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .input-output {
+      display: flex;
+      gap: 20px;
+      justify-content: space-between;
+    }
+    .input-output textarea {
+      width: 100%;
+      height: 120px;
+      resize: vertical;
+      padding: 10px;
+      font-size: 16px;
+    }
+    .input-output label {
+      font-weight: bold;
+    }
+  </style>
 </head>
 <body>
-    <h2>ВІДМІНЮВАННЯ РЕЧЕННЯ У ЗНАХІДНИЙ ВІДМІНОК</h2>
-    <form id="sentenceForm" class="form-container">
-        <div class="input-output">
-            <div>
-                <label for="sentence">Введіть речення:</label>
-                <textarea id="sentence" name="sentence" required placeholder="Наприклад: військовослужбовець за призовом під час мобілізації головний сержант Погуржельський Дмитро Вікторович, старший технік 2 зенітної кулеметної роти"></textarea>
-            </div>
-            <div>
-                <label for="result">Результат:</label>
-                <textarea id="result" name="result" readonly placeholder="Тут з'явиться відмінюваний текст"></textarea>
-            </div>
-        </div>
+  <h2>ВІДМІНЮВАННЯ РЕЧЕННЯ У ЗНАХІДНИЙ ВІДМІНОК</h2>
+  <form id="sentenceForm" class="form-container">
+    <div class="input-output">
+      <div>
+        <label for="sentence">Введіть речення:</label>
+        <textarea id="sentence" name="sentence" required placeholder="Наприклад: військовослужбовець за призовом під час мобілізації головний сержант Погуржельський Дмитро Вікторович, старший технік 2 зенітної кулеметної роти"></textarea>
+      </div>
+      <div>
+        <label for="result">Результат:</label>
+        <textarea id="result" name="result" readonly placeholder="Тут з'явиться відмінюваний текст"></textarea>
+      </div>
+    </div>
 
-        <label>Стать для ПІБ (якщо є):</label>
-        <input type="radio" id="male" name="gender" value="male" checked> Чоловіча
-        <input type="radio" id="female" name="gender" value="female"> Жіноча
+    <label>Стать для ПІБ (якщо є):</label>
+    <input type="radio" id="male" name="gender" value="male" checked> Чоловіча
+    <input type="radio" id="female" name="gender" value="female"> Жіноча
 
-        <button type="submit">Відмінити</button>
-    </form>
+    <button type="submit">Відмінити</button>
+  </form>
 
-    <script type="module">
-        import * as shevchenko from 'https://cdn.skypack.dev/@shevchenko/js';
+  <script type="module">
+    import * as shevchenko from 'https://cdn.skypack.dev/@shevchenko/js';
 
-        const wordDeclension = {
-            "військовослужбовець": "військовослужбовця",
-            "головний": "головного",
-            "сержант": "сержанта",
-            "старший": "старшого",
-            "технік": "техніка"
-        };
+    const wordDeclension = {
+      "військовослужбовець": "військовослужбовця",
+      "головний": "головного",
+      "сержант": "сержанта",
+      "старший": "старшого",
+      "технік": "техніка",
+      "мобілізації": "мобілізації",
+      "зенітної": "зенітної",
+      "кулеметної": "кулеметної",
+      "роти": "роту"
+    };
 
-        function isNamePart(word) {
-            return /^[А-ЯІЇЄҐ][а-яіїєґ']+$/.test(word);
+    function isNamePart(word) {
+      return /^[А-ЯІЇЄҐ][а-яіїєґ']+$/.test(word);
+    }
+
+    function declinePIB(words, gender) {
+      const [lastName, firstName, patronymic] = words;
+      const person = {
+        gender: gender,
+        familyName: lastName,
+        givenName: firstName,
+        patronymic: patronymic
+      };
+      return shevchenko.inAccusative(person);
+    }
+
+    document.getElementById('sentenceForm').addEventListener('submit', async function(event) {
+      event.preventDefault();
+
+      const sentence = document.getElementById('sentence').value.trim();
+      const gender = document.querySelector('input[name="gender"]:checked').value === 'male' ? 'masculine' : 'feminine';
+
+      const tokens = sentence.match(/\w+|[.,!?;:\-]+|\s+/g) || [];
+      let result = '';
+      let i = 0;
+
+      while (i < tokens.length) {
+        const w1 = tokens[i]?.trim();
+        const sep1 = tokens[i + 1] || '';
+        const w2 = tokens[i + 2]?.trim();
+        const sep2 = tokens[i + 3] || '';
+        const w3 = tokens[i + 4]?.trim();
+        const sep3 = tokens[i + 5] || '';
+
+        if (isNamePart(w1) && isNamePart(w2) && isNamePart(w3)) {
+          try {
+            const declined = declinePIB([w1, w2, w3], gender);
+            result += declined.familyName + sep1 + declined.givenName + sep2 + declined.patronymic + sep3;
+            i += 6;
+            continue;
+          } catch (e) {
+            console.error('Помилка shevchenko.js:', e);
+          }
         }
 
-        document.getElementById('sentenceForm').addEventListener('submit', async function(event) {
-            event.preventDefault();
+        const word = tokens[i];
+        const plain = word.normalize('NFC').toLowerCase().replace(/[.,]/g, '');
 
-            const sentence = document.getElementById('sentence').value.trim();
-            const gender = document.querySelector('input[name="gender"]:checked').value === 'male' ? 'masculine' : 'feminine';
+        if (plain in wordDeclension) {
+          const punctuation = word.match(/[.,]$/);
+          result += wordDeclension[plain] + (punctuation ? punctuation[0] : '');
+        } else {
+          result += word;
+        }
 
-            // Розбити речення на слова (без втрати розділових знаків)
-            const tokens = sentence.match(/[^\s]+|\s+|[,.!?]/g) || [];
-            let result = '';
+        i++;
+      }
 
-            for (let i = 0; i < tokens.length; i++) {
-                const word = tokens[i];
-
-                // Спроба знайти ПІБ (наприклад: Погуржельський Дмитро Вікторович)
-                if (
-                    isNamePart(tokens[i]) &&
-                    isNamePart(tokens[i + 2]) &&
-                    isNamePart(tokens[i + 4])
-                ) {
-                    const person = {
-                        gender: gender,
-                        familyName: tokens[i],
-                        givenName: tokens[i + 2],
-                        patronymic: tokens[i + 4]
-                    };
-                    try {
-                        const declined = shevchenko.inAccusative(person);
-                        result += declined.familyName + tokens[i + 1] + declined.givenName + tokens[i + 3] + declined.patronymic;
-                        i += 4;
-                        continue;
-                    } catch (e) {
-                        console.error('Shevchenko error:', e);
-                    }
-                }
-
-                // Слово з нашого словника — замінити
-                const clean = word.toLowerCase().replace(/[,\.]/g, "");
-                if (wordDeclension[clean]) {
-                    result += wordDeclension[clean];
-                } else {
-                    result += word;
-                }
-            }
-
-            document.getElementById('result').value = result;
-        });
-    </script>
+      document.getElementById('result').value = result;
+    });
+  </script>
 </body>
 </html>
-
