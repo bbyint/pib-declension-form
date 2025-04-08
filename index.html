@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Відмінювання речення у знахідний відмінок</title>
+    <script src="https://unpkg.com/@shevchenko/js@0.8.0/dist/shevchenko.umd.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 20px;
+            background: linear-gradient(to bottom right, #ddeeff, #ccddee);
+        }
+        label, input, textarea {
+            display: block;
+            margin-bottom: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .form-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .input-output {
+            display: flex;
+            gap: 20px;
+            justify-content: space-between;
+        }
+        .input-output textarea {
+            width: 100%;
+            height: 120px;
+            resize: vertical;
+            padding: 10px;
+            font-size: 16px;
+        }
+        .input-output label {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h2>ВІДМІНЮВАННЯ РЕЧЕННЯ У ЗНАХІДНИЙ ВІДМІНОК</h2>
+    <form id="sentenceForm" class="form-container">
+        <div class="input-output">
+            <div>
+                <label for="sentence">Введіть речення:</label>
+                <textarea id="sentence" name="sentence" required placeholder="Наприклад: військовослужбовець за призовом під час мобілізації головний сержант Погуржельський Дмитро Вікторович, старший технік 2 зенітної кулеметної роти"></textarea>
+            </div>
+            <div>
+                <label for="result">Результат:</label>
+                <textarea id="result" name="result" readonly placeholder="Тут з'явиться відмінюваний текст"></textarea>
+            </div>
+        </div>
+
+        <label>Стать для ПІБ (якщо є):</label>
+        <input type="radio" id="male" name="gender" value="male" checked> Чоловіча
+        <input type="radio" id="female" name="gender" value="female"> Жіноча
+
+        <button type="submit">Відмінити</button>
+    </form>
+
+    <script src="https://unpkg.com/@shevchenko/js@0.8.0/dist/shevchenko.umd.js"></script>
+<script>
+    const wordDeclension = {
+        "військовослужбовець": "військовослужбовця",
+        "за": "за",
+        "призовом": "призовом",
+        "під": "під",
+        "час": "час",
+        "мобілізації": "мобілізацію",
+        "головний": "головного",
+        "сержант": "сержанта",
+        "старший": "старшого",
+        "технік": "техніка",
+        "зенітної": "зенітну",
+        "кулеметної": "кулеметну",
+        "роти": "роту",
+        "2": "2"
+    };
+
+    function isNamePart(word) {
+        return /^[А-ЯІЇЄҐ][а-яіїєґ']+$/.test(word);
+    }
+
+    document.getElementById('sentenceForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+
+        const sentence = document.getElementById('sentence').value.trim();
+        const gender = document.querySelector('input[name="gender"]:checked').value === 'male' ? 'masculine' : 'feminine';
+        const words = sentence.split(/\s+/);
+
+        let resultWords = [];
+        let i = 0;
+
+        while (i < words.length) {
+            const word = words[i];
+            const next1 = words[i + 1];
+            const next2 = words[i + 2];
+
+            if (isNamePart(word) && isNamePart(next1) && isNamePart(next2)) {
+                const person = {
+                    gender: gender,
+                    familyName: word,
+                    givenName: next1,
+                    patronymic: next2
+                };
+
+                try {
+                    const declined = shevchenko.inAccusative(person);
+                    resultWords.push(declined.familyName, declined.givenName, declined.patronymic);
+                    i += 3;
+                    continue;
+                } catch (err) {
+                    console.error("Shevchenko error:", err);
+                }
+            }
+
+            const cleanWord = word.replace(/,$/, "");
+            const declined = wordDeclension[cleanWord.toLowerCase()] || cleanWord;
+            resultWords.push(word.endsWith(',') ? declined + ',' : declined);
+            i++;
+        }
+
+        document.getElementById('result').value = resultWords.join(" ");
+    });
+</script>
+</body>
+</html>
