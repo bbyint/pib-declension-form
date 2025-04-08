@@ -74,19 +74,10 @@
 
         const wordDeclension = {
             "військовослужбовець": "військовослужбовця",
-            "за": "за",
-            "призовом": "призовом",
-            "під": "під",
-            "час": "час",
-            "мобілізації": "мобілізації",
             "головний": "головного",
             "сержант": "сержанта",
             "старший": "старшого",
-            "технік": "техніка",
-            "зенітної": "зенітної",
-            "кулеметної": "кулеметної",
-            "роти": "роти",
-            "2": "2"
+            "технік": "техніка"
         };
 
         function isNamePart(word) {
@@ -98,45 +89,46 @@
 
             const sentence = document.getElementById('sentence').value.trim();
             const gender = document.querySelector('input[name="gender"]:checked').value === 'male' ? 'masculine' : 'feminine';
-            const words = sentence.split(/(\s+|,\s*)/);
 
-            let resultWords = [];
-            let i = 0;
+            // Розбити речення на слова (без втрати розділових знаків)
+            const tokens = sentence.match(/[^\s]+|\s+|[,.!?]/g) || [];
+            let result = '';
 
-            while (i < words.length) {
-                const word = words[i].trim();
-                const next1 = words[i + 2]?.trim();
-                const next2 = words[i + 4]?.trim();
+            for (let i = 0; i < tokens.length; i++) {
+                const word = tokens[i];
 
-                if (isNamePart(word) && isNamePart(next1) && isNamePart(next2)) {
+                // Спроба знайти ПІБ (наприклад: Погуржельський Дмитро Вікторович)
+                if (
+                    isNamePart(tokens[i]) &&
+                    isNamePart(tokens[i + 2]) &&
+                    isNamePart(tokens[i + 4])
+                ) {
                     const person = {
                         gender: gender,
-                        familyName: word,
-                        givenName: next1,
-                        patronymic: next2
+                        familyName: tokens[i],
+                        givenName: tokens[i + 2],
+                        patronymic: tokens[i + 4]
                     };
-
                     try {
                         const declined = shevchenko.inAccusative(person);
-                        resultWords.push(declined.familyName);
-                        resultWords.push(words[i + 1]);
-                        resultWords.push(declined.givenName);
-                        resultWords.push(words[i + 3]);
-                        resultWords.push(declined.patronymic);
-                        i += 5;
+                        result += declined.familyName + tokens[i + 1] + declined.givenName + tokens[i + 3] + declined.patronymic;
+                        i += 4;
                         continue;
-                    } catch (err) {
-                        console.error("Shevchenko error:", err);
+                    } catch (e) {
+                        console.error('Shevchenko error:', e);
                     }
                 }
 
-                const cleanWord = word.replace(/,$/, "");
-                const declined = wordDeclension[cleanWord.toLowerCase()] || cleanWord;
-                resultWords.push(words[i].endsWith(',') ? declined + ',' : declined);
-                i++;
+                // Слово з нашого словника — замінити
+                const clean = word.toLowerCase().replace(/[,\.]/g, "");
+                if (wordDeclension[clean]) {
+                    result += wordDeclension[clean];
+                } else {
+                    result += word;
+                }
             }
 
-            document.getElementById('result').value = resultWords.join("");
+            document.getElementById('result').value = result;
         });
     </script>
 </body>
