@@ -69,9 +69,8 @@
     <button type="submit">Відмінити</button>
   </form>
 
-  <script type="module">
-    import * as shevchenko from 'https://cdn.skypack.dev/@shevchenko/js';
-
+  <script src="https://unpkg.com/@shevchenko/js@latest/dist/shevchenko.umd.js"></script>
+  <script>
     const wordDeclension = {
       "військовослужбовець": "військовослужбовця",
       "головний": "головного",
@@ -79,9 +78,7 @@
       "старший": "старшого",
       "технік": "техніка",
       "мобілізації": "мобілізації",
-      "зенітної": "зенітної",
-      "кулеметної": "кулеметної",
-      "роти": "роту"
+      "зенітної кулеметної роти": "зенітної кулеметної роти"
     };
 
     function isNamePart(word) {
@@ -96,7 +93,7 @@
         givenName: firstName,
         patronymic: patronymic
       };
-      return shevchenko.inAccusative(person);
+      return window.shevchenko.inAccusative(person);
     }
 
     document.getElementById('sentenceForm').addEventListener('submit', async function(event) {
@@ -105,40 +102,25 @@
       const sentence = document.getElementById('sentence').value.trim();
       const gender = document.querySelector('input[name="gender"]:checked').value === 'male' ? 'masculine' : 'feminine';
 
-      const tokens = sentence.match(/\w+|[.,!?;:\-]+|\s+/g) || [];
-      let result = '';
-      let i = 0;
+      const pibRegex = /([А-ЯІЇЄҐ][а-яіїєґ']+)[\s]+([А-ЯІЇЄҐ][а-яіїєґ']+)[\s]+([А-ЯІЇЄҐ][а-яіїєґ']+)/;
+      const match = sentence.match(pibRegex);
 
-      while (i < tokens.length) {
-        const w1 = tokens[i]?.trim();
-        const sep1 = tokens[i + 1] || '';
-        const w2 = tokens[i + 2]?.trim();
-        const sep2 = tokens[i + 3] || '';
-        const w3 = tokens[i + 4]?.trim();
-        const sep3 = tokens[i + 5] || '';
+      let result = sentence;
 
-        if (isNamePart(w1) && isNamePart(w2) && isNamePart(w3)) {
-          try {
-            const declined = declinePIB([w1, w2, w3], gender);
-            result += declined.familyName + sep1 + declined.givenName + sep2 + declined.patronymic + sep3;
-            i += 6;
-            continue;
-          } catch (e) {
-            console.error('Помилка shevchenko.js:', e);
-          }
+      if (match) {
+        const [fullMatch, lastName, firstName, patronymic] = match;
+        try {
+          const declined = declinePIB([lastName, firstName, patronymic], gender);
+          const declinedFull = `${declined.familyName} ${declined.givenName} ${declined.patronymic}`;
+          result = result.replace(fullMatch, declinedFull);
+        } catch (e) {
+          console.error('Помилка shevchenko.js:', e);
         }
+      }
 
-        const word = tokens[i];
-        const plain = word.normalize('NFC').toLowerCase().replace(/[.,]/g, '');
-
-        if (plain in wordDeclension) {
-          const punctuation = word.match(/[.,]$/);
-          result += wordDeclension[plain] + (punctuation ? punctuation[0] : '');
-        } else {
-          result += word;
-        }
-
-        i++;
+      for (const [key, value] of Object.entries(wordDeclension)) {
+        const regex = new RegExp(`\\b${key}\\b`, 'gi');
+        result = result.replace(regex, value);
       }
 
       document.getElementById('result').value = result;
